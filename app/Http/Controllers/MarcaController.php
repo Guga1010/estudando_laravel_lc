@@ -22,8 +22,7 @@ class MarcaController extends Controller
      */
     public function index()
     {
-        //$marcas = Marca::all();
-        $marcas = $this->marca->all();
+        $marcas = $this->marca->with('modelos')->get();
         return response()->json($marcas, 200);
     }
 
@@ -66,7 +65,7 @@ class MarcaController extends Controller
      */
     public function show($id)
     {
-        $marca = $this->marca->find($id);
+        $marca = $this->marca->with('modelos')->find($id);
         if($marca === null){
             return response()->json(['erro' => 'Não é possível mostrar, porque o item não existe'], 404);
         }
@@ -93,6 +92,9 @@ class MarcaController extends Controller
      */
     public function update(Request $request, $id)
     {
+        //TESTE: MODIFICAÇÕES REALIZADAS ATRAVÉS DE UM COMENTÁRIO, PARA RESOLVER O PROBLEMA DE NÃO PASSAR IMAGEM 
+
+        $imagem_urn = ''; //TESTE
         $marca = $this->marca->find($id);
 
         if($marca === null){
@@ -117,15 +119,21 @@ class MarcaController extends Controller
         // Exclusão da imagem
         if($request->file('imagem')){
             Storage::disk('public')->delete($marca->imagem);
-        }
 
+            //TESTE
+            $imagem = $request->file('imagem');
+            $imagem_urn = $imagem->store('imagens','public');
+            //FIM DO TESTE
+        }
+        /*
         $imagem = $request->file('imagem');
         $imagem_urn = $imagem->store('imagens','public');
+        */
 
-        $marca->update([
-            'nome' => $request->nome,
-            'imagem' => $imagem_urn
-        ]);
+        $marca->fill($request->all());
+        //$marca->imagem = $imagem_urn;
+        $marca->imagem = $imagem_urn != '' ? $imagem_urn : $marca->imagem; //TESTE
+        $marca->save();
 
         return response()->json($marca, 200);
     }
