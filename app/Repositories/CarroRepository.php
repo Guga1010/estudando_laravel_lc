@@ -4,7 +4,7 @@ namespace app\Repositories;
 
 use App\Repositories\AbstractRepository;
 
-class MarcaRepository extends AbstractRepository{
+class CarroRepository extends AbstractRepository{
 
 }
 
