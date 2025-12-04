@@ -35,7 +35,9 @@
                     </template>
 
                     <template v-slot:rodape>
-                        <button type="button" class="btn btn-primary btn-sm float-right">Adicionar</button>
+                        <button type="button" class="btn btn-primary btn-sm float-right" data-toggle="modal" data-target="#modalMarca">
+                            Adicionar
+                        </button>
                     </template>
                 </card-component>
 
@@ -43,9 +45,65 @@
 
             </div>
         </div>
+        <modal-component id="modalMarca" titulo="Adicionar Marca">
+
+            <template v-slot:conteudo>
+                <div class="form-group">
+                    <input-container-component titulo="Nome da Marca" id="inputNovoNome" id-help="novoNomeHelp" texto-ajuda="Informe o nome da marca">
+                        <input type="text" class="form-control" id="inputNovoNome" aria-describedby="novoNomeHelp" placeholder="Nome da marca" v-model="nomeMarca">
+                    </input-container-component>
+                </div>
+                
+                <div class="form-group">
+                    <input-container-component titulo="Imagem" id="inputNovaImagem" id-help="novaImagemHelp" texto-ajuda="Selecione uma imagem">
+                        <input type="file" class="form-control-file" id="inputNovaImagem" aria-describedby="novaImagemHelp" placeholder="Imagem da Marca" @change="carregarImagem($event)">
+                    </input-container-component>
+                </div>
+            </template>
+
+            <template v-slot:rodape>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary" @click="salvar()">Salvar</button>
+            </template>
+
+        </modal-component>
     </div>
 </template>
 
 <script>
+    export default {
+        data(){
+            return {
+                urlBase: 'http://localhost:8000/api/v1/marca',
+                nomeMarca: '',
+                arquivoImagem: []
+            }
+        },
+        methods: {
+            carregarImagem(e){
+                this.arquivoImagem = e.target.files
+            },
+            salvar(){
 
+                let formData = new FormData();
+                formData.append('nome', this.nomeMarca)
+                formData.append('imagem', this.arquivoImagem[0])
+
+                let config = {
+                    headers:{
+                        'Content-Type': 'multipart/form-data',
+                        'Accept': 'application/json'
+                    }
+                }
+
+                axios.post(this.urlBase, formData, config)
+                    .then(response => {
+                        console.log(response)
+                    })
+                    .catch(errors => {
+                        console.log(errors)
+                    })
+            }
+        }
+    }
 </script>
