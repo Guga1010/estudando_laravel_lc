@@ -2212,7 +2212,8 @@ __webpack_require__.r(__webpack_exports__);
       nomeMarca: '',
       arquivoImagem: [],
       transacaoStatus: '',
-      transacaoDetalhes: []
+      transacaoDetalhes: {},
+      marcas: []
     };
   },
   computed: {
@@ -2226,11 +2227,26 @@ __webpack_require__.r(__webpack_exports__);
     }
   },
   methods: {
+    carregarLista: function carregarLista() {
+      var _this = this;
+      var config = {
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': this.token
+        }
+      };
+      axios.get(this.urlBase, config).then(function (response) {
+        _this.marcas = response.data;
+        console.log(_this.marcas);
+      })["catch"](function (errors) {
+        console.log(errors);
+      });
+    },
     carregarImagem: function carregarImagem(e) {
       this.arquivoImagem = e.target.files;
     },
     salvar: function salvar() {
-      var _this = this;
+      var _this2 = this;
       var formData = new FormData();
       formData.append('nome', this.nomeMarca);
       formData.append('imagem', this.arquivoImagem[0]);
@@ -2243,13 +2259,22 @@ __webpack_require__.r(__webpack_exports__);
       };
       axios.post(this.urlBase, formData, config).then(function (response) {
         console.log(response);
-        _this.transacaoStatus = 'adicionado';
+        _this2.transacaoStatus = 'adicionado';
+        _this2.transacaoDetalhes = {
+          mensagem: "ID da marca: " + response.data.id
+        };
       })["catch"](function (errors) {
         console.log(errors);
-        _this.transacaoStatus = 'erro';
-        _this.transacaoDetalhes = errors.response;
+        _this2.transacaoStatus = 'erro';
+        _this2.transacaoDetalhes = {
+          mensagem: errors.response.data.message,
+          dados: errors.response.data.errors
+        };
       });
     }
+  },
+  mounted: function mounted() {
+    this.carregarLista();
   }
 });
 
@@ -2283,7 +2308,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({});
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
+  props: ['dados', 'titulos']
+});
 
 /***/ }),
 
@@ -2307,7 +2334,7 @@ var render = function render() {
     attrs: {
       role: "alert"
     }
-  }, [_vm._v("\n    " + _vm._s(_vm.titulo) + "\n    "), _c("hr"), _vm._v("\n    " + _vm._s(_vm.detalhes.data.message) + "\n    "), _c("br"), _vm._v(" "), _vm.detalhes.data.errors ? _c("ul", _vm._l(_vm.detalhes.data.errors, function (e, key) {
+  }, [_vm._v("\n    " + _vm._s(_vm.titulo) + "\n    "), _c("hr"), _vm._v(" "), _c("p", [_vm._v(_vm._s(_vm.detalhes.mensagem))]), _vm._v(" "), _c("br"), _vm._v(" "), _vm.detalhes.dados ? _c("ul", _vm._l(_vm.detalhes.dados, function (e, key) {
     return _c("li", {
       key: key
     }, [_vm._v(_vm._s(e[0]))]);
@@ -2713,7 +2740,12 @@ var render = function render() {
     scopedSlots: _vm._u([{
       key: "conteudo",
       fn: function fn() {
-        return [_c("table-component")];
+        return [_c("table-component", {
+          attrs: {
+            dados: _vm.marcas,
+            titulos: ["ID", "Nome", "Imagem"]
+          }
+        })];
       },
       proxy: true
     }, {
@@ -2740,7 +2772,9 @@ var render = function render() {
       fn: function fn() {
         return [_vm.transacaoStatus == "adicionado" ? _c("alert-component", {
           attrs: {
-            tipo: "success"
+            tipo: "success",
+            detalhes: _vm.transacaoDetalhes,
+            titulo: "Cadastro realizado com sucesso"
           }
         }) : _vm._e(), _vm._v(" "), _vm.transacaoStatus == "erro" ? _c("alert-component", {
           attrs: {
@@ -2918,43 +2952,32 @@ __webpack_require__.r(__webpack_exports__);
 var render = function render() {
   var _vm = this,
     _c = _vm._self._c;
-  return _vm._m(0);
-};
-var staticRenderFns = [function () {
-  var _vm = this,
-    _c = _vm._self._c;
-  return _c("table", {
+  return _c("div", [_c("table", {
     staticClass: "table table-hover"
-  }, [_c("thead", [_c("tr", [_c("th", {
-    attrs: {
-      scope: "col"
-    }
-  }, [_vm._v("#")]), _vm._v(" "), _c("th", {
-    attrs: {
-      scope: "col"
-    }
-  }, [_vm._v("First")]), _vm._v(" "), _c("th", {
-    attrs: {
-      scope: "col"
-    }
-  }, [_vm._v("Last")]), _vm._v(" "), _c("th", {
-    attrs: {
-      scope: "col"
-    }
-  }, [_vm._v("Handle")])])]), _vm._v(" "), _c("tbody", [_c("tr", [_c("th", {
-    attrs: {
-      scope: "row"
-    }
-  }, [_vm._v("1")]), _vm._v(" "), _c("td", [_vm._v("Mark")]), _vm._v(" "), _c("td", [_vm._v("Otto")]), _vm._v(" "), _c("td", [_vm._v("@mdo")])]), _vm._v(" "), _c("tr", [_c("th", {
-    attrs: {
-      scope: "row"
-    }
-  }, [_vm._v("2")]), _vm._v(" "), _c("td", [_vm._v("Jacob")]), _vm._v(" "), _c("td", [_vm._v("Thornton")]), _vm._v(" "), _c("td", [_vm._v("@fat")])]), _vm._v(" "), _c("tr", [_c("th", {
-    attrs: {
-      scope: "row"
-    }
-  }, [_vm._v("3")]), _vm._v(" "), _c("td", [_vm._v("John")]), _vm._v(" "), _c("td", [_vm._v("Doe")]), _vm._v(" "), _c("td", [_vm._v("@social")])])])]);
-}];
+  }, [_c("thead", [_c("tr", _vm._l(_vm.titulos, function (t, key) {
+    return _c("th", {
+      key: key,
+      attrs: {
+        scope: "col"
+      }
+    }, [_vm._v(_vm._s(t))]);
+  }), 0)]), _vm._v(" "), _c("tbody", _vm._l(_vm.dados, function (m) {
+    return _c("tr", {
+      key: m.id
+    }, [_c("th", {
+      attrs: {
+        scope: "row"
+      }
+    }, [_vm._v(_vm._s(m.id))]), _vm._v(" "), _c("td", [_vm._v(_vm._s(m.nome))]), _vm._v(" "), _c("td", [_c("img", {
+      attrs: {
+        src: "/storage/" + m.imagem,
+        width: "30",
+        height: "30"
+      }
+    })])]);
+  }), 0)])]);
+};
+var staticRenderFns = [];
 render._withStripped = true;
 
 

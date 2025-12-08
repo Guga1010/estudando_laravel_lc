@@ -31,7 +31,11 @@
                 <!-- Card de listagem de marcas -->
                 <card-component titulo="Listagem de Marcas">
                     <template v-slot:conteudo>
-                        <table-component></table-component> 
+                        <table-component 
+                            :dados="marcas" 
+                            :titulos="['ID', 'Nome', 'Imagem']"
+                        >
+                        </table-component> 
                     </template>
 
                     <template v-slot:rodape>
@@ -48,7 +52,7 @@
         <modal-component id="modalMarca" titulo="Adicionar Marca">
 
             <template v-slot:alertas>
-                <alert-component tipo="success" v-if="transacaoStatus == 'adicionado'">
+                <alert-component tipo="success" :detalhes="transacaoDetalhes" titulo="Cadastro realizado com sucesso" v-if="transacaoStatus == 'adicionado'">
                 </alert-component>
                 <alert-component tipo="danger" :detalhes="transacaoDetalhes" titulo="Ocorreu um erro ao cadastrar a marca" v-if="transacaoStatus == 'erro'">
                 </alert-component>
@@ -85,7 +89,8 @@
                 nomeMarca: '',
                 arquivoImagem: [],
                 transacaoStatus: '',
-                transacaoDetalhes: []
+                transacaoDetalhes: {},
+                marcas: []
             }
         },
         computed: {
@@ -101,6 +106,24 @@
             }
         },
         methods: {
+            carregarLista(){
+
+                let config = {
+                    headers:{
+                        'Accept': 'application/json',
+                        'Authorization': this.token
+                    }
+                }
+
+                axios.get(this.urlBase, config)
+                    .then(response => {
+                        this.marcas = response.data
+                        console.log(this.marcas)
+                    })
+                    .catch(errors => {
+                        console.log(errors)
+                    })
+            },
             carregarImagem(e){
                 this.arquivoImagem = e.target.files
             },
@@ -122,13 +145,22 @@
                     .then(response => {
                         console.log(response)
                         this.transacaoStatus = 'adicionado'
+                        this.transacaoDetalhes = {
+                            mensagem: "ID da marca: " + response.data.id
+                        }
                     })
                     .catch(errors => {
                         console.log(errors)
                         this.transacaoStatus = 'erro'
-                        this.transacaoDetalhes = errors.response
+                        this.transacaoDetalhes = {
+                            mensagem: errors.response.data.message,
+                            dados: errors.response.data.errors
+                        }
                     })
             }
+        },
+        mounted(){
+            this.carregarLista()
         }
     }
 </script>
