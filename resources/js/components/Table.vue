@@ -29,9 +29,6 @@ export default {
         dadosFiltrados(){
             let campos = Object.keys(this.titulos)
             let dadosFiltrados = []
-
-            console.log(this.dados)
-
             this.dados.map((item, chave) => {
                 let itemFiltrado = {}
 
