@@ -9,19 +9,19 @@
                         <div class="row">
                             <div class="col mb-3">
                                 <input-container-component titulo="ID" id="inputId" id-help="idHelp" texto-ajuda="Opcional, informe o ID da marca">
-                                    <input type="number" class="form-control" id="inputId" aria-describedby="idHelp" placeholder="ID">
+                                    <input type="number" class="form-control" id="inputId" aria-describedby="idHelp" placeholder="ID" v-model="busca.id">
                                 </input-container-component>
                             </div>
                             <div class="col mb-3">
                                 <input-container-component titulo="Nome" id="inputNome" id-help="nomeHelp" texto-ajuda="Opcional, informe o nome da marca">
-                                    <input type="text" class="form-control" id="inputNome" aria-describedby="idNome" placeholder="Nome da Marca">
+                                    <input type="text" class="form-control" id="inputNome" aria-describedby="idNome" placeholder="Nome da Marca" v-model="busca.nome">
                                 </input-container-component>
                             </div>
                         </div>
                     </template>
                     
                     <template v-slot:rodape>
-                        <button type="submit" class="btn btn-primary btn-sm float-right">Pesquisar</button>
+                        <button type="submit" class="btn btn-primary btn-sm float-right" @click="pesquisar()">Pesquisar</button>
                     </template>
 
                 </card-component>
@@ -32,7 +32,14 @@
                 <card-component titulo="Listagem de Marcas">
                     <template v-slot:conteudo>
                         <table-component 
-                            :dados="marcas.data" 
+                            :dados="marcas.data"
+                            :visualizar="{
+                                visivel: true,
+                                dataToggle: 'modal',
+                                dataTarget: '#modalMarcaVisualizar'
+                            }"
+                            :atualizar="true"
+                            :remover="true"
                             :titulos="{
                                 id: {titulo: 'ID', tipo: 'texto'},
                                 nome: {titulo: 'Nome', tipo: 'texto'},
@@ -68,6 +75,8 @@
 
             </div>
         </div>
+
+        <!-- Início do modal de adicionar marca -->
         <modal-component id="modalMarca" titulo="Adicionar Marca">
 
             <template v-slot:alertas>
@@ -97,6 +106,25 @@
             </template>
 
         </modal-component>
+        <!-- Fim do modal de adicionar marca -->
+
+        <!-- Início do modal de visualizar marca -->
+        <modal-component id="modalMarcaVisualizar" titulo="Visualizar Marca">
+
+            <template v-slot:alertas></template>
+
+            <template v-slot:conteudo>
+                Teste
+            </template>
+
+            <template v-slot:rodape>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+            </template>
+
+        </modal-component>
+        <!-- Fim do modal de visualizar marca -->
+
+
     </div>
 </template>
 
@@ -105,12 +133,18 @@
         data(){
             return {
                 urlBase: 'http://localhost:8000/api/v1/marca',
+                urlPaginacao: '',
+                urlFiltro: '',
                 nomeMarca: '',
                 arquivoImagem: [],
                 transacaoStatus: '',
                 transacaoDetalhes: {},
                 marcas: { 
                     data: []
+                },
+                busca: {
+                    id: '',
+                    nome: ''
                 }
             }
         },
@@ -127,9 +161,32 @@
             }
         },
         methods: {
+            pesquisar(){
+
+                let filtro = ''
+
+                for (let chave in this.busca) {
+                    if(this.busca[chave]){
+                        if(filtro != ''){
+                            filtro += ';'
+                        }
+                        filtro += chave + ':like:' + this.busca[chave]
+                    }
+                }
+
+                if(filtro != ''){
+                    this.urlFiltro = '&filtro=' + filtro
+                    this.urlPaginacao = 'page=1'
+                }else{
+                    this.urlFiltro = ''
+                }   
+            
+                this.carregarLista();
+
+            },
             paginacao(l){
                 if(l.url){
-                    this.urlBase = l.url
+                    this.urlPaginacao = l.url.split('?')[1]
                     this.carregarLista()
                 }
             },
@@ -142,7 +199,9 @@
                     }
                 }
 
-                axios.get(this.urlBase, config)
+                let url = this.urlBase + '?' + this.urlPaginacao + this.urlFiltro
+
+                axios.get(url, config)
                     .then(response => {
                         this.marcas = response.data
                         //console.log(this.marcas)
