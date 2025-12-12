@@ -39,7 +39,11 @@
                                 dataTarget: '#modalMarcaVisualizar'
                             }"
                             :atualizar="true"
-                            :remover="true"
+                            :remover="{
+                                visivel: true,
+                                dataToggle: 'modal',
+                                dataTarget: '#modalMarcaRemover'
+                            }"
                             :titulos="{
                                 id: {titulo: 'ID', tipo: 'texto'},
                                 nome: {titulo: 'Nome', tipo: 'texto'},
@@ -114,7 +118,21 @@
             <template v-slot:alertas></template>
 
             <template v-slot:conteudo>
-                Teste
+                <input-container-component titulo="ID">
+                    <input type="text" class="form-control" :value="$store.state.item.id" disabled>
+                </input-container-component>
+
+                <input-container-component titulo="Nome">
+                    <input type="text" class="form-control" :value="$store.state.item.nome" disabled>
+                </input-container-component>
+
+                <input-container-component titulo="Imagem">
+                    <img :src="'storage/'+$store.state.item.imagem" v-if="$store.state.item.imagem">
+                </input-container-component>
+
+                <input-container-component titulo="Data de criação">
+                    <input type="text" class="form-control" :value="$store.state.item.created_at" disabled>
+                </input-container-component>
             </template>
 
             <template v-slot:rodape>
@@ -124,12 +142,36 @@
         </modal-component>
         <!-- Fim do modal de visualizar marca -->
 
+        <!-- Início do modal de remoção de marca -->
+        <modal-component id="modalMarcaRemover" titulo="Remover Marca">
+
+            <template v-slot:alertas></template>
+
+            <template v-slot:conteudo>
+                <input-container-component titulo="ID">
+                    <input type="text" class="form-control" :value="$store.state.item.id" disabled>
+                </input-container-component>
+
+                <input-container-component titulo="Nome">
+                    <input type="text" class="form-control" :value="$store.state.item.nome" disabled>
+                </input-container-component>
+            </template>
+
+            <template v-slot:rodape>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-danger" @click="remover()">Remover</button>
+            </template>
+
+        </modal-component>
+        <!-- Fim do modal de remoção de marca -->
 
     </div>
 </template>
 
 <script>
+import InputContainer from './InputContainer.vue'
     export default {
+  components: { InputContainer },
         data(){
             return {
                 urlBase: 'http://localhost:8000/api/v1/marca',
@@ -161,6 +203,35 @@
             }
         },
         methods: {
+            remover(){
+                let confirmacao = confirm('O registro será apagado, tem certeza?')
+
+                if(!confirmacao){
+                    return false;
+                }
+
+                let url = this.urlBase + '/' + this.$store.state.item.id
+
+                let formData = new FormData()
+                formData.append('_method','delete')
+
+                let config = {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': this.token
+                    }
+                }
+
+                axios.post(url, formData, config)
+                    .then(response => {
+                        console.log('O registro foi excluído com sucesso', response)
+                        this.carregarLista()
+                    })
+                    .catch(errors => {
+                        console.log('Ocorreu algum erro ao excluir o registro', errors.response)
+                    })
+
+            },
             pesquisar(){
 
                 let filtro = ''
