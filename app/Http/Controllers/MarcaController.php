@@ -166,7 +166,7 @@ class MarcaController extends Controller
     {
         $marca = $this->marca->find($id);
         if($marca === null){
-            return ['erro' => 'Não é possível excluir, porque o item não existe'];
+            return response()->json(['erro' => 'Não é possível excluir, porque o item não existe'],404);
         }
 
         // Exclusão da imagem
