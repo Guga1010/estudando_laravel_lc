@@ -3507,10 +3507,29 @@ __webpack_require__.r(__webpack_exports__);
   },
   methods: {
     atualizar: function atualizar() {
+      var _this = this;
       console.log(this.$store.state.item);
+      var url = this.urlBase + '/' + this.$store.state.item.id;
+      var formData = new FormData();
+      formData.append('_method', 'patch');
+      formData.append('nome', this.$store.state.item.nome);
+      formData.append('imagem', this.arquivoImagem[0]);
+      var config = {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Accept': 'application/json',
+          'Authorization': this.token
+        }
+      };
+      axios.post(url, formData, config).then(function (response) {
+        console.log(response);
+        _this.carregarLista();
+      })["catch"](function (errors) {
+        console.log(errors.data);
+      });
     },
     remover: function remover() {
-      var _this = this;
+      var _this2 = this;
       var confirmacao = confirm('O registro será apagado, tem certeza?');
       if (!confirmacao) {
         return false;
@@ -3526,13 +3545,13 @@ __webpack_require__.r(__webpack_exports__);
       };
       axios.post(url, formData, config).then(function (response) {
         console.log('O registro foi excluído com sucesso', response);
-        _this.$store.state.transacao.status = 'sucesso';
-        _this.$store.state.transacao.mensagem = response.data.msg;
-        _this.carregarLista();
+        _this2.$store.state.transacao.status = 'sucesso';
+        _this2.$store.state.transacao.mensagem = response.data.msg;
+        _this2.carregarLista();
       })["catch"](function (errors) {
         console.log('Ocorreu algum erro ao excluir o registro', errors.response);
-        _this.$store.state.transacao.status = 'erro';
-        _this.$store.state.transacao.mensagem = errors.response.data.erro;
+        _this2.$store.state.transacao.status = 'erro';
+        _this2.$store.state.transacao.mensagem = errors.response.data.erro;
       });
     },
     pesquisar: function pesquisar() {
@@ -3560,7 +3579,7 @@ __webpack_require__.r(__webpack_exports__);
       }
     },
     carregarLista: function carregarLista() {
-      var _this2 = this;
+      var _this3 = this;
       var config = {
         headers: {
           'Accept': 'application/json',
@@ -3569,7 +3588,7 @@ __webpack_require__.r(__webpack_exports__);
       };
       var url = this.urlBase + '?' + this.urlPaginacao + this.urlFiltro;
       axios.get(url, config).then(function (response) {
-        _this2.marcas = response.data;
+        _this3.marcas = response.data;
         //console.log(this.marcas)
       })["catch"](function (errors) {
         console.log(errors);
@@ -3579,7 +3598,7 @@ __webpack_require__.r(__webpack_exports__);
       this.arquivoImagem = e.target.files;
     },
     salvar: function salvar() {
-      var _this3 = this;
+      var _this4 = this;
       var formData = new FormData();
       formData.append('nome', this.nomeMarca);
       formData.append('imagem', this.arquivoImagem[0]);
@@ -3592,14 +3611,14 @@ __webpack_require__.r(__webpack_exports__);
       };
       axios.post(this.urlBase, formData, config).then(function (response) {
         console.log(response);
-        _this3.transacaoStatus = 'adicionado';
-        _this3.transacaoDetalhes = {
+        _this4.transacaoStatus = 'adicionado';
+        _this4.transacaoDetalhes = {
           mensagem: "ID da marca: " + response.data.id
         };
       })["catch"](function (errors) {
         console.log(errors);
-        _this3.transacaoStatus = 'erro';
-        _this3.transacaoDetalhes = {
+        _this4.transacaoStatus = 'erro';
+        _this4.transacaoDetalhes = {
           mensagem: errors.response.data.message,
           dados: errors.response.data.errors
         };
@@ -4507,8 +4526,8 @@ var render = function render() {
           directives: [{
             name: "model",
             rawName: "v-model",
-            value: _vm.nomeMarca,
-            expression: "nomeMarca"
+            value: _vm.$store.state.item.nome,
+            expression: "$store.state.item.nome"
           }],
           staticClass: "form-control",
           attrs: {
@@ -4518,12 +4537,12 @@ var render = function render() {
             placeholder: "Nome da marca"
           },
           domProps: {
-            value: _vm.nomeMarca
+            value: _vm.$store.state.item.nome
           },
           on: {
             input: function input($event) {
               if ($event.target.composing) return;
-              _vm.nomeMarca = $event.target.value;
+              _vm.$set(_vm.$store.state.item, "nome", $event.target.value);
             }
           }
         })])], 1), _vm._v(" "), _c("div", {

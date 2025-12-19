@@ -183,7 +183,7 @@
             <template v-slot:conteudo>
                 <div class="form-group">
                     <input-container-component titulo="Nome da Marca" id="inputAtualizarNome" id-help="atualizarNomeHelp" texto-ajuda="Informe o nome da marca">
-                        <input type="text" class="form-control" id="inputAtualizarNome" aria-describedby="atualizarNomeHelp" placeholder="Nome da marca" v-model="nomeMarca">
+                        <input type="text" class="form-control" id="inputAtualizarNome" aria-describedby="atualizarNomeHelp" placeholder="Nome da marca" v-model="$store.state.item.nome">
                     </input-container-component>
                 </div>
                 
@@ -242,6 +242,30 @@ import InputContainer from './InputContainer.vue'
         methods: {
             atualizar(){
                 console.log(this.$store.state.item)
+
+                let url = this.urlBase + '/' + this.$store.state.item.id
+
+                let formData = new FormData()
+                formData.append('_method', 'patch')
+                formData.append('nome', this.$store.state.item.nome)
+                formData.append('imagem', this.arquivoImagem[0])
+
+                let config = {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        'Accept': 'application/json',
+                        'Authorization': this.token
+                    }
+                }
+
+                axios.post(url,formData,config)
+                    .then(response => {
+                        console.log(response)
+                        this.carregarLista()
+                    })
+                    .catch(errors => {
+                        console.log(errors.data)
+                    })
             },
             remover(){
                 let confirmacao = confirm('O registro será apagado, tem certeza?')
