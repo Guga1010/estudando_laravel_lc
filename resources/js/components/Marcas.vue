@@ -178,6 +178,10 @@
         <modal-component id="modalMarcaAtualizar" titulo="Atualizar Marca">
 
             <template v-slot:alertas>
+                <alert-component tipo="success" titulo="Exclusão realizada com sucesso" :detalhes="$store.state.transacao" v-if="$store.state.transacao.status == 'sucesso'">
+                </alert-component>
+                <alert-component tipo="danger" titulo="Erro ao excluir" :detalhes="$store.state.transacao" v-if="$store.state.transacao.status == 'erro'">
+                </alert-component>
             </template>
 
             <template v-slot:conteudo>
@@ -227,18 +231,6 @@ import InputContainer from './InputContainer.vue'
                 }
             }
         },
-        computed: {
-            token(){
-                let token = document.cookie.split(';').find(indice => {
-                    return indice.includes('token=')
-                })
-
-                token = token.split('=')[1]
-                token = 'Bearer ' + token
-
-                return token;
-            }
-        },
         methods: {
             atualizar(){
                 console.log(this.$store.state.item)
@@ -248,23 +240,31 @@ import InputContainer from './InputContainer.vue'
                 let formData = new FormData()
                 formData.append('_method', 'patch')
                 formData.append('nome', this.$store.state.item.nome)
-                formData.append('imagem', this.arquivoImagem[0])
+                
+                if(this.arquivoImagem[0]){
+                    formData.append('imagem', this.arquivoImagem[0])
+                }
+                
 
                 let config = {
                     headers: {
                         'Content-Type': 'multipart/form-data',
-                        'Accept': 'application/json',
-                        'Authorization': this.token
                     }
                 }
 
                 axios.post(url,formData,config)
                     .then(response => {
+                        this.$store.state.transacao.status = 'sucesso'
+                        this.$store.state.transacao.mensagem = 'Registro atualizado com sucesso'
                         console.log(response)
+                        inputAtualizarImagem.value = ''
                         this.carregarLista()
                     })
                     .catch(errors => {
-                        console.log(errors.data)
+                        this.$store.state.transacao.status = 'erro'
+                        this.$store.state.transacao.mensagem = errors.response.data.message
+                        this.$store.state.transacao.dados = errors.response.data.errors
+                        console.log(errors)
                     })
             },
             remover(){
@@ -279,14 +279,7 @@ import InputContainer from './InputContainer.vue'
                 let formData = new FormData()
                 formData.append('_method','delete')
 
-                let config = {
-                    headers: {
-                        'Accept': 'application/json',
-                        'Authorization': this.token
-                    }
-                }
-
-                axios.post(url, formData, config)
+                axios.post(url, formData)
                     .then(response => {
                         console.log('O registro foi excluído com sucesso', response)
                         this.$store.state.transacao.status = 'sucesso'
@@ -331,16 +324,9 @@ import InputContainer from './InputContainer.vue'
             },
             carregarLista(){
 
-                let config = {
-                    headers:{
-                        'Accept': 'application/json',
-                        'Authorization': this.token
-                    }
-                }
-
                 let url = this.urlBase + '?' + this.urlPaginacao + this.urlFiltro
 
-                axios.get(url, config)
+                axios.get(url)
                     .then(response => {
                         this.marcas = response.data
                         //console.log(this.marcas)
@@ -361,8 +347,6 @@ import InputContainer from './InputContainer.vue'
                 let config = {
                     headers:{
                         'Content-Type': 'multipart/form-data',
-                        'Accept': 'application/json',
-                        'Authorization': this.token
                     }
                 }
 

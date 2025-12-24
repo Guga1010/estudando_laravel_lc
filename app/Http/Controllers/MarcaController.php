@@ -110,13 +110,10 @@ class MarcaController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //TESTE: MODIFICAÇÕES REALIZADAS ATRAVÉS DE UM COMENTÁRIO, PARA RESOLVER O PROBLEMA DE NÃO PASSAR IMAGEM 
-
-        $imagem_urn = ''; //TESTE
         $marca = $this->marca->find($id);
 
         if($marca === null){
-            return ['erro' => 'Não é possível atualizar, porque o item não existe'];
+            return response()->json(['erro' => 'Não é possível atualizar, porque o item não existe'],404);
         }
 
         if($request->method() === 'PATCH'){
@@ -134,25 +131,19 @@ class MarcaController extends Controller
             $request->validate($marca->rules(),$marca->feedback());
         }
 
-        // Exclusão da imagem
+        // Preenche o objeto com todos os dados do $request
+        $marca->fill($request->all());
+
         if($request->file('imagem')){
+            // Exclusão da imagem
             Storage::disk('public')->delete($marca->imagem);
 
-            //TESTE
             $imagem = $request->file('imagem');
             $imagem_urn = $imagem->store('imagens','public');
-            //FIM DO TESTE
+            $marca->imagem = $imagem_urn;
         }
-        /*
-        $imagem = $request->file('imagem');
-        $imagem_urn = $imagem->store('imagens','public');
-        */
 
-        $marca->fill($request->all());
-        //$marca->imagem = $imagem_urn;
-        $marca->imagem = $imagem_urn != '' ? $imagem_urn : $marca->imagem; //TESTE
         $marca->save();
-
         return response()->json($marca, 200);
     }
 

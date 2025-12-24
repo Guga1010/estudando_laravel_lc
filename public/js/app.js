@@ -3495,16 +3495,6 @@ __webpack_require__.r(__webpack_exports__);
       }
     };
   },
-  computed: {
-    token: function token() {
-      var token = document.cookie.split(';').find(function (indice) {
-        return indice.includes('token=');
-      });
-      token = token.split('=')[1];
-      token = 'Bearer ' + token;
-      return token;
-    }
-  },
   methods: {
     atualizar: function atualizar() {
       var _this = this;
@@ -3513,19 +3503,25 @@ __webpack_require__.r(__webpack_exports__);
       var formData = new FormData();
       formData.append('_method', 'patch');
       formData.append('nome', this.$store.state.item.nome);
-      formData.append('imagem', this.arquivoImagem[0]);
+      if (this.arquivoImagem[0]) {
+        formData.append('imagem', this.arquivoImagem[0]);
+      }
       var config = {
         headers: {
-          'Content-Type': 'multipart/form-data',
-          'Accept': 'application/json',
-          'Authorization': this.token
+          'Content-Type': 'multipart/form-data'
         }
       };
       axios.post(url, formData, config).then(function (response) {
+        _this.$store.state.transacao.status = 'sucesso';
+        _this.$store.state.transacao.mensagem = 'Registro atualizado com sucesso';
         console.log(response);
+        inputAtualizarImagem.value = '';
         _this.carregarLista();
       })["catch"](function (errors) {
-        console.log(errors.data);
+        _this.$store.state.transacao.status = 'erro';
+        _this.$store.state.transacao.mensagem = errors.response.data.message;
+        _this.$store.state.transacao.dados = errors.response.data.errors;
+        console.log(errors);
       });
     },
     remover: function remover() {
@@ -3537,13 +3533,7 @@ __webpack_require__.r(__webpack_exports__);
       var url = this.urlBase + '/' + this.$store.state.item.id;
       var formData = new FormData();
       formData.append('_method', 'delete');
-      var config = {
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': this.token
-        }
-      };
-      axios.post(url, formData, config).then(function (response) {
+      axios.post(url, formData).then(function (response) {
         console.log('O registro foi excluído com sucesso', response);
         _this2.$store.state.transacao.status = 'sucesso';
         _this2.$store.state.transacao.mensagem = response.data.msg;
@@ -3580,14 +3570,8 @@ __webpack_require__.r(__webpack_exports__);
     },
     carregarLista: function carregarLista() {
       var _this3 = this;
-      var config = {
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': this.token
-        }
-      };
       var url = this.urlBase + '?' + this.urlPaginacao + this.urlFiltro;
-      axios.get(url, config).then(function (response) {
+      axios.get(url).then(function (response) {
         _this3.marcas = response.data;
         //console.log(this.marcas)
       })["catch"](function (errors) {
@@ -3604,9 +3588,7 @@ __webpack_require__.r(__webpack_exports__);
       formData.append('imagem', this.arquivoImagem[0]);
       var config = {
         headers: {
-          'Content-Type': 'multipart/form-data',
-          'Accept': 'application/json',
-          'Authorization': this.token
+          'Content-Type': 'multipart/form-data'
         }
       };
       axios.post(this.urlBase, formData, config).then(function (response) {
@@ -3681,6 +3663,7 @@ __webpack_require__.r(__webpack_exports__);
     setStore: function setStore(obj) {
       this.$store.state.transacao.status = '';
       this.$store.state.transacao.mensagem = '';
+      this.$store.state.transacao.dados = '';
       this.$store.state.item = obj;
     }
   },
@@ -4507,7 +4490,19 @@ var render = function render() {
     scopedSlots: _vm._u([{
       key: "alertas",
       fn: function fn() {
-        return undefined;
+        return [_vm.$store.state.transacao.status == "sucesso" ? _c("alert-component", {
+          attrs: {
+            tipo: "success",
+            titulo: "Exclusão realizada com sucesso",
+            detalhes: _vm.$store.state.transacao
+          }
+        }) : _vm._e(), _vm._v(" "), _vm.$store.state.transacao.status == "erro" ? _c("alert-component", {
+          attrs: {
+            tipo: "danger",
+            titulo: "Erro ao excluir",
+            detalhes: _vm.$store.state.transacao
+          }
+        }) : _vm._e()];
       },
       proxy: true
     }, {
@@ -4730,7 +4725,7 @@ var render = function render() {
           width: "30",
           height: "30"
         }
-      })]) : _vm._e(), _vm._v(" "), _vm.titulos[chaveValor].tipo == "data" ? _c("span", [_vm._v("..." + _vm._s(valor))]) : _vm._e()]);
+      })]) : _vm._e(), _vm._v(" "), _vm.titulos[chaveValor].tipo == "data" ? _c("span", [_vm._v(_vm._s(_vm._f("formataDataTempoGlobal")(valor)))]) : _vm._e()]);
     }), _vm._v(" "), _vm.visualizar.visivel || _vm.atualizar.visivel || _vm.remover.visivel ? _c("td", [_vm.visualizar.visivel ? _c("button", {
       staticClass: "btn btn-outline-primary btn-sm",
       attrs: {
@@ -52016,7 +52011,8 @@ var store = new Vuex__WEBPACK_IMPORTED_MODULE_0__["default"].Store({
     item: {},
     transacao: {
       status: '',
-      mensagem: ''
+      mensagem: '',
+      dados: ''
     }
   }
 });
@@ -52049,6 +52045,23 @@ Vue.component('paginate-component', (__webpack_require__(/*! ./components/Pagina
  * or customize the JavaScript scaffolding to fit your unique needs.
  */
 
+Vue.filter('formataDataTempoGlobal', function (d) {
+  if (!d) {
+    return '';
+  }
+  d = d.split('T');
+  var data = d[0];
+  var tempo = d[1];
+
+  // Formata data
+  data = data.split('-');
+  data = data[2] + '/' + data[1] + '/' + data[0];
+
+  // Formata tempo
+  tempo = tempo.split('.');
+  tempo = tempo[0];
+  return data + ' ' + tempo;
+});
 var app = new Vue({
   el: '#app',
   store: store
@@ -52101,6 +52114,38 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 //     cluster: process.env.MIX_PUSHER_APP_CLUSTER,
 //     forceTLS: true
 // });
+
+/* Interceptando a requisição */
+axios.interceptors.request.use(function (config) {
+  config.headers['Accept'] = 'application/json';
+  var token = document.cookie.split(';').find(function (indice) {
+    return indice.includes('token=');
+  });
+  token = token.split('=')[1];
+  token = 'Bearer ' + token;
+  config.headers.Authorization = token;
+  console.log('Interceptando o request antes do envio', config);
+  return config;
+}, function (error) {
+  console.log('Erro na requisição: ', error);
+  return Promise.reject(error);
+});
+
+/* Interceptando a resposta */
+axios.interceptors.response.use(function (response) {
+  console.log('Interceptando a resposta antes de chegar na aplicação', response);
+  return response;
+}, function (error) {
+  console.log('Erro na resposta: ', error.response);
+  if (error.response.status == 401 && error.response.data.message == 'Token has expired') {
+    axios.post('http://localhost:8000/api/refresh').then(function (response) {
+      console.log('Refresh com sucesso: ', response);
+      document.cookie = 'token=' + response.data.token + ';SameSite=Lax';
+      window.location.reload();
+    });
+  }
+  return Promise.reject(error);
+});
 
 /***/ }),
 
